@@ -15,6 +15,16 @@
 .buttonSize {
     height: 100%;
 }
+
+.icon-li {
+    opacity: 0;
+    justify-content: center;
+    border: transparent;
+}
+
+.icon-li:hover{
+    opacity: 1;
+}
 /* 
 
     You can write your own styles here...

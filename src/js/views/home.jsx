@@ -1,104 +1,153 @@
-import React, { useState } from "react";
-
-//import components
-
+import React, { useState, useEffect } from "react";
 
 //create your first component
 const Home = () => {
+	//useStates
 	const [task, setTask] = useState({
-		name: "",
-		isDone: false
+		label: "",
+		done: false
 	})
-
 	const [listTask, setListTask] = useState([])
+	//********************************************* */
 
-	const addTask = (event) =>{
-		if(event.key === "Enter"){
-		setListTask([
-			...listTask,
-			task
-		])
-		setTask({
-			...task, name: ""
-		})
-	}
-		
-	}
+	//Url Data
+	let urlBase = "https://assets.breatheco.de/apis/fake/todos/user"
+	let urlUser = "ibrahim"
+	//********************************************* */
 
+	//Add a task to list with APIs
+	const addTaskToList = async (event) =>{
+		try{
+			//Get task on keypress Enter
+			if(event.key === "Enter"){
+				//Check that task isn't empty
+				if(task.label.trim() !== ""){
+					//Get API
+					let response = await fetch(`${urlBase}/${urlUser}`, 
+					{
+						method:"PUT",
+						headers: {
+							"Content-Type":"application/json"
+						},
+						//push listTask and the current task into the API
+						body: JSON.stringify([...listTask, task])
+					})
+					//Check if API is ok, then clear task and update listTask
+					if(response.ok){
+						setTask({label:"", done:false})
+						getTodos()
+					}
+				}
+			}
+		}catch(error){
+			console.log(`Explote este es el error: ${error}`)
+		}
+	}
+	//******************************************* */
+
+	//Update task value as it writes input
 	const handleTaskValue  = (givenTask) =>{
-		console.log(givenTask.target.value)
 		setTask({
 			...task,
 			[givenTask.target.name]: givenTask.target.value
 		})
 	}
+	//******************************************* */
 
-	const handleTaskState = (event) =>{
-		if(task.isDone){
-			setTask({
-				...task,
-				[event.target.name]: false
-			})
-		}
-		else if(!task.isDone){
-			setTask({
-				...task,
-				[event.target.name]: true
-			})
+	//Get data from API and push it into the task lisk
+	const getTodos = async () => {
+		try{
+			//fetch and push data into task lisk
+			let response = await fetch(`${urlBase}/${urlUser}`)
+			if(response.ok){
+			let data = await response.json()
+				if(response.status !== 404){
+					setListTask(data)
+				}
+			//if there is no data to push, post a new, empty list. Then recurse
+			}else{
+				let responseTodos = await fetch(`${urlBase}/${urlUser}` , 
+				{
+					method:"POST",
+					headers: {
+						"Content-Type":"application/json"
+					},
+					body: JSON.stringify([])
+				})
+				if(responseTodos.ok){
+					getTodos()
+				}
+			}
+		//Catch error
+		}catch(error){
+			console.log(`Explote este es el error: ${error}`)
 		}
 	}
+	//******************************************* */
 
-	const deleteTask = (id) =>{
+	//Delete task from list, currently doesn't interact with the API
+	const deleteTask = async (id) =>{
 		let newList = listTask.filter((item, index) => {
 			if(id !== index){
 				return item
 			}
 		})
 
-		setListTask(newList)
+		try {
+			let response = await fetch(`${urlBase}/${urlUser}`,
+			{
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify(newList)
+			})
+			if(response.ok){
+				getTodos()
+			}
+		} catch (error) {
+			console.log(`Explote este es el error: ${error}`)
+		}
 	}
+	//******************************************* */
+
+	useEffect(()=>{
+		getTodos()
+	}, [])
 
 	return (
 		<>
 		<div className="container d-flex justify-content-center">
-			
 			<div className="row">
 				<div className="col-12 d-flex justify-content-center">
 				<h1 className="fancy topText">TODOS</h1>
 				</div >
+				{/* This input gets data for task */}
 				<div className="col-12">
 					<input 
 						className="fancy inputText"
 						onChange={handleTaskValue} 
-						onKeyDown={addTask} 
-						name="name" value={task.name} 
+						onKeyDown={addTaskToList} 
+						name="label" value={task.label} 
 						placeholder="What is on your mind?" 
 						type="text"
 					/>
 				</div>
-				{/* <div className="col-2">
-					<button 
-						name="isDone" 
-						onClick={handleTaskState} 
-						className="btn btn-primary buttonSize">
-							Set as Done
-					</button>
-				</div> */}
-				
-				
-				
-					<ul>
-						{listTask.map(
-							(element, index) => {
-							return	(
-								<div className="col-12 fancy inputText d-flex justify-content-between py-1" key={index}>
-									{element.name}
-									<button className=" fancy btn btn-secondary" onClick={() => deleteTask(index)}>Delete</button>
-								</div>	
-							)}
+				<ul>
+					{listTask.map(
+						(element, index) => {
+						return	(
+							<div className="col-12 fancy inputText d-flex justify-content-between py-1" key={index}>
+								{element.label}
+								{/* This button deletes a task upon click */}
+								<button className=" fancy icon-li px-5" onClick={() => deleteTask(index)}>X</button>
+							</div>	
 						)}
-					</ul>
-				
+					)}
+				</ul>
+				<div className="col-12 d-flex justify-content-left fancy fs-1">
+					Items on list: {listTask.length}
+				</div>		
 				
 			</div>
 		</div>
