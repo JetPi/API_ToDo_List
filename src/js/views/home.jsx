@@ -140,7 +140,7 @@ const Home = () => {
 							<div className="col-12 fancy inputText d-flex justify-content-between py-1" key={index}>
 								{element.label}
 								{/* This button deletes a task upon click */}
-								<button className=" fancy icon-li px-5" onClick={() => deleteTask(index)}>X</button>
+								<button className="fancy px-5" onClick={() => deleteTask(index)}>X</button>
 							</div>	
 						)}
 					)}
